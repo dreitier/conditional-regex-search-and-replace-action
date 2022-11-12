@@ -26,8 +26,8 @@ jobs:
           composer-options: "--prefer-dist --no-ansi --no-interaction --no-scripts --no-progress"
 
       - name: Run tests
-        shell: bash
         run: |
           php -v
-          ./vendor/bin/pest --ci
+          php test.php
+          vendor/bin/pest --ci
           echo "LA"
