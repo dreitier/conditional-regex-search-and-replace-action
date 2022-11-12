@@ -26,4 +26,7 @@ jobs:
           composer-options: "--prefer-dist"
 
       - name: Run tests
-        run: ./application test --no-interaction
+        shell: bash
+        run: |
+         ls -al
+         ./application test --no-interaction
