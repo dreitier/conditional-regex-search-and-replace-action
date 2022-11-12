@@ -28,5 +28,4 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-         ls -al
-         ./application test --no-interaction
+         ./vendor/bin/pest
