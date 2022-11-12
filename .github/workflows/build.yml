@@ -28,4 +28,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-         ./vendor/bin/pest
+          php -v
+          ./vendor/bin/pest --ci
+          echo "LA"
+		  
