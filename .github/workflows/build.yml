@@ -27,7 +27,4 @@ jobs:
 
       - name: Run tests
         run: |
-          php -v
-          php test.php
           vendor/bin/pest --ci
-          echo "LA"
