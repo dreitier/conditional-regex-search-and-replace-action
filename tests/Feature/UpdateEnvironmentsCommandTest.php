@@ -31,10 +31,7 @@ function has_tty() {
 }
 
 function is_github() {
-	var_dump(getenv());
-	exit(0);
-	
-	return !empty(getenv("CI"));
+	return !empty(getenv("CI")) && !empty(getenv("GITHUB_ACTION"));
 }
 
 if (has_tty() && !is_github()) {
