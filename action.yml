@@ -1,0 +1,61 @@
+name: 'Conditional regex search and replace'
+author: 'Christopher Klein'
+description: 'Executes conditional search and replace operations on a set of files. Strings in files are replaced when they match given regular expressions.'
+inputs:
+  mappings:
+    description: 'DSL to define search-and-replace operations'
+    required: true
+  directory:
+    description: 'Directory, in which to operate. By default, the base directory is used'
+    required: false
+  if_well_known_vars_missing_fail:
+    description: "If 1, it fails if none of docker_image_tag, git_branch or git_tag is provided"
+    required: false
+  if_no_match_fail:
+    description: 'If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `1`'
+    required: false
+  register_custom_regexes:
+    description: 'A comma-separated list of custom regular expressions to register'
+    required: false
+  register_custom_variables:
+    description: 'A comma-separated list of custom variables to register'
+    required: false
+  dump:
+    description: 'If `1`, it dumps the provided configuration'
+    required: false
+  docker_image_tag:
+    description: 'Docker image tag created by upstream repository'
+    required: false
+  docker_image_tag_regex:
+    description: 'Regular expression to modify occurences of Docker image tags in globbed files'
+    required: false
+  git_tag:
+    description: 'Git tag created by upstream repository'
+    required: false
+  git_tag_regex:
+    description: 'Regular expression to modify occurences of Git tags in globbed files'
+    required: false
+  git_branch:
+    description: 'Git branch modified in upstream repository'
+    required: false
+  git_branch_regex:
+    description: 'Regular expression to modify occurences of Git branch in globbed files'
+    required: false
+runs:
+  using: 'composite'
+  steps:      
+    - id: conditional-regex-search-and-replace
+      run: $GITHUB_ACTION_PATH/entrypoint.sh
+      shell: bash
+      env:
+        MAPPINGS: ${{ inputs.mappings }}
+        IF_NO_MATCH_FAIL: ${{ inputs.if_no_match_fail }}
+        IF_WELL_KNOWN_VARS_MISSING_FAIL: ${{ inputs.if_well_known_vars_missing_fail }}
+        REGISTER_CUSTOM_REGEXES: ${{ inputs.register_custom_regexes }}
+        REGISTER_CUSTOM_VARIABLES: ${{ inputs.register_custom_variables }}
+        DOCKER_IMAGE_TAG: ${{ inputs.docker_image_tag }}
+        DOCKER_IMAGE_TAG_REGEX: ${{ inputs.docker_image_tag_regex }}
+        GIT_TAG: ${{ inputs.git_tag }}
+        GIT_TAG_REGEX: ${{ inputs.git_tag_regex }}
+        GIT_BRANCH: ${{ inputs.git_branch }}
+        GIT_BRANCH_REGEX: ${{ inputs.git_branch_regex }}

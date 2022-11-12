@@ -1,0 +1,6 @@
+first: value
+second: value2
+  imageTag: "1.0.0" 4.0.0
+fourth: value4
+  # the next line gets not replaced as the regex does not match the line
+  imageTag: "0.0.666"

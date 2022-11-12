@@ -1,0 +1,6 @@
+first: value
+second: value2
+  imageTag: "0.0.666" old_custom_var
+fourth: value4
+  # the next line gets not replaced as the regex does not match the line
+  imageTag: "0.0.666"
