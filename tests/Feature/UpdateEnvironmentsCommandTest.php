@@ -31,6 +31,9 @@ function has_tty() {
 }
 
 function is_github() {
+	var_dump(getenv());
+	exit(0);
+	
 	return !empty(getenv("CI"));
 }
 
