@@ -26,24 +26,28 @@ beforeEach(function() {
 	putenv("REGISTER_CUSTOM_REGEXES=my_custom_regex");
 });
 
-it('can update environments via artisan', function () {
-    $this->artisan('update-environments')->assertExitCode(0);
-});
+function has_tty() {
+	return is_writable("/dev/tty");
+}
 
-it('can dump the active application configuration via artisan', function () {
-return;
-    $this->withoutMockingConsoleOutput()->artisan('update-environments --dump');//->assertExitCode(0);
-	$output = Artisan::output();
-	
-	// echo $output;
-	expect($output)
-		->toMatch('/docker_image_tag.*\|.*main-1.0.0/')
-		->toMatch('/git_tag.*\|.*v1.0.0/')
-		->toMatch('/git_branch.*\|.*main/')
-		->toMatch('/custom_var.*\|.*2.6.6/')
-		->toMatch('/docker_image_tag_regex.*\|.*imageTag.*/' /* regex with a regex */)
-		->toMatch('/\*\*dev\/\*\.yaml.*environments\/eu\/dev\/values\.yaml/')
-		->toMatch('/docker_image_tag\s+\|\s+main\-1.0.0\s+|\s+main\.\*\|\s+Yes\s+\|.*/')
-	;
-});
+if (has_tty()) {
+	it('can update environments via artisan', function () {
+		$this->artisan('update-environments')->assertExitCode(0);
+	});
 
+	it('can dump the active application configuration via artisan', function () {
+		$this->withoutMockingConsoleOutput()->artisan('update-environments --dump');//->assertExitCode(0);
+		$output = Artisan::output();
+		
+		// echo $output;
+		expect($output)
+			->toMatch('/docker_image_tag.*\|.*main-1.0.0/')
+			->toMatch('/git_tag.*\|.*v1.0.0/')
+			->toMatch('/git_branch.*\|.*main/')
+			->toMatch('/custom_var.*\|.*2.6.6/')
+			->toMatch('/docker_image_tag_regex.*\|.*imageTag.*/' /* regex with a regex */)
+			->toMatch('/\*\*dev\/\*\.yaml.*environments\/eu\/dev\/values\.yaml/')
+			->toMatch('/docker_image_tag\s+\|\s+main\-1.0.0\s+|\s+main\.\*\|\s+Yes\s+\|.*/')
+		;
+	});
+}
