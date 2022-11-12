@@ -24,6 +24,6 @@ jobs:
         uses: "ramsey/composer-install@v2"
         with:
           composer-options: "--prefer-dist"
-	
+
       - name: Run tests
         run: ./application test
