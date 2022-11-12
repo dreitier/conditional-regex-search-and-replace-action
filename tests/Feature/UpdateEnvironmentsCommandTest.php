@@ -32,7 +32,6 @@ return;
 });
 
 it('can dump the active application configuration via artisan', function () {
-return;
     $this->withoutMockingConsoleOutput()->artisan('update-environments --dump');//->assertExitCode(0);
 	$output = Artisan::output();
 	
