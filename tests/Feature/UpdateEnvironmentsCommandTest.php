@@ -30,7 +30,11 @@ function has_tty() {
 	return is_writable("/dev/tty");
 }
 
-if (has_tty()) {
+function is_github() {
+	return !empty(getenv("CI"));
+}
+
+if (has_tty() && !is_github()) {
 	it('can update environments via artisan', function () {
 		$this->artisan('update-environments')->assertExitCode(0);
 	});
