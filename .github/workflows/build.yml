@@ -23,7 +23,7 @@ jobs:
       - name: Install and cache composer packages
         uses: "ramsey/composer-install@v2"
         with:
-          composer-options: "--prefer-dist"
+          composer-options: "--prefer-dist --no-ansi --no-interaction --no-scripts --no-progress"
 
       - name: Run tests
         shell: bash
@@ -31,4 +31,3 @@ jobs:
           php -v
           ./vendor/bin/pest --ci
           echo "LA"
-		  
