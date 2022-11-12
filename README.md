@@ -1,4 +1,4 @@
-# conditional-regex-search-and-replace
+# conditional-regex-search-and-replace-action
 This action executes conditional search and replace operations on a set of files. Strings in files are replaced when they match given regular expressions.
 
 Originally, this action was created to update parameters (like Docker image tag and Git branch) in Helm charts and Kustomize templates in GitOps repositories.
@@ -66,8 +66,8 @@ with:
   # ...
   register_custom_regexes: check_for_customer_regex, project_id_regex
 env:
-  CHECK_FOR_CUSTOMER_REGEX: "/customer: (<customer_number>\d+)/"
-  PROJECT_ID_REGEX: "/project: (<project_id>\d+)/"
+  CHECK_FOR_CUSTOMER_REGEX: "/customer: (?<customer_number>\d+)/"
+  PROJECT_ID_REGEX: "/project: (?<project_id>\d+)/"
 ```
 
 
@@ -284,7 +284,7 @@ Using Argo CD Image Updater is totally fine but might have some drawbacks:
 - Setting up Argo CD Image Updater might be difficult, depending upon the environment.
 - Argo CD Image Updater does not support complex search-and-replace operations.
 
-When using `conditional-regex-search-and-replace`, you can either configure Webhooks in your GitOps repository to notify Argo CD or let Argo CD pull the latest version.
+When using `conditional-regex-search-and-replace-action`, you can either configure Webhooks in your GitOps repository to notify Argo CD or let Argo CD pull the latest version.
 
 ### Why are you not using Bash for this action?
 Before introducing this action, I've developed a Bash script for updating various GitOps repositories. Different projects had different requirements: The Bash script was no longer maintainable.
