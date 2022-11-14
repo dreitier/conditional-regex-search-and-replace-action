@@ -114,12 +114,12 @@ class UpdateEnvironmentsCommand extends Command
 				$path = getenv($varName);
 				
 				if (!$path) {
-					LogEvent::warn('Environment variable ' . $varName . ' is not available, but --github has been provided. Can not set output variables.');
+					LogEvent::warn('Environment variable "' . $varName . '" is not available, but --github has been provided. Can not set output variables.');
 					return;
 				}
 
 				$key = 'total_modified_files';
-				LogEvent::debug('Writing "' . $key . "' to '" . $path . "'");
+				LogEvent::debug('Writing "' . $key . '=' . $total . '" to "' . $path . '"');
 				file_put_contents($path, $key . '=' . (int)$total, FILE_APPEND);
 			}
 		);
