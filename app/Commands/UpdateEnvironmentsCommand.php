@@ -104,13 +104,13 @@ class UpdateEnvironmentsCommand extends Command
 	
 	private function configureGithub()
 	{
-		$this->info("Enabling GitHub Actions output");
+		$this->info("Enabling GitHub Actions support");
 
 		Event::listen(
 			AfterAllFilesProcessed::class,
 			function (AfterAllFilesProcessed $afterAllFilesProcessed) {
 				$total = sizeof($afterAllFilesProcessed->getModifiedFiles());
-				$varName = "GITHUB_ENV";
+				$varName = "GITHUB_OUTPUT";
 				$path = getenv($varName);
 				
 				if (!$path) {
@@ -118,7 +118,9 @@ class UpdateEnvironmentsCommand extends Command
 					return;
 				}
 
-				file_put_contents($path, 'total_modified_files=' . (int)$total, FILE_APPEND);
+				$key = 'total_modified_files';
+				LogEvent::debug('Writing "' . $key . "' to '" . $path . "'");
+				file_put_contents($path, $key . '=' . (int)$total, FILE_APPEND);
 			}
 		);
 	}
