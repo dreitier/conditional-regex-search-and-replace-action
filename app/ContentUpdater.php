@@ -30,10 +30,12 @@ class ContentUpdater
 		$contentInEdit = $content;
 		
 		foreach ($this->replacers as $replacer) {
-			LogEvent::info("      Replacing '/{$replacer->regex}/' with '{$this->variable->value}'");
+			LogEvent::info("      Trying to replace '/{$replacer->regex}/' with '{$this->variable->value}'");
 		
 			if (preg_match_all('/' . $replacer->regex . '/', $contentInEdit, $r)) {
 				$totalMatches = sizeof($r[0]);
+				
+				LogEvent::info("        Found $totalMatches matches, replacing:");
 				
 				for ($i = 0; $i < $totalMatches; $i++) {
 					$lineFound = $r[0][$i];
@@ -53,8 +55,11 @@ class ContentUpdater
 					
 					$contentInEdit = str_replace($lineFound, $newLine, $contentInEdit);
 					
-					LogEvent::info("      Converted line '$lineFound' to '$newLine'");
+					LogEvent::info("          Converted line '$lineFound' to '$newLine'");
 				}
+			}
+			else {
+				LogEvent::warn("        No matches found for '/{$replacer->regex}/'");
 			}
 		}
 		

@@ -51,7 +51,7 @@ class UpdateEnvironments
 			
 			$files = $this->findFiles($mapping->glob);
 			$totalFoundFiles = sizeof($files);
-			LogEvent::info("  We have a match! Total globbed file for '{$mapping->glob}': {$totalFoundFiles}");
+			LogEvent::info("  We have a match! Total globbed files for '{$mapping->glob}': {$totalFoundFiles}");
 			
 			if (!$totalFoundFiles) {
 				LogEvent::warn("  Skipping, as no files has been found for glob");
