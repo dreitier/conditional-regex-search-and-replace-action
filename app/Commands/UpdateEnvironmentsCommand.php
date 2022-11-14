@@ -110,7 +110,7 @@ class UpdateEnvironmentsCommand extends Command
 			AfterAllFilesProcessed::class,
 			function (AfterAllFilesProcessed $afterAllFilesProcessed) {
 				$total = sizeof($afterAllFilesProcessed->getModifiedFiles());
-				$varName = "GITHUB_EVN";
+				$varName = "GITHUB_ENV";
 				$path = getenv($varName);
 				
 				if (!$path) {
