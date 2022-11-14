@@ -18,8 +18,6 @@ beforeEach(function() {
 	putenv("CUSTOM_VAR_REGEX=blub.*blub2");
 	// --- custom replacer
 	putenv("MY_CUSTOM_REGEX=bla.*bla2");
-	// --- register previously provided replacer regexes
-	putenv("REGISTER_CUSTOM_REGEXES=my_custom_regex");
 });
 
 function has_tty() {

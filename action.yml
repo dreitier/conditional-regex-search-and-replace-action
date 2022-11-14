@@ -8,6 +8,9 @@ inputs:
   directory:
     description: 'Directory, in which to operate. By default, the base directory is used'
     required: false
+  dump:
+    description: 'If `1`, it dumps the provided configuration'
+    required: false
   if_well_known_vars_missing_fail:
     description: "If 1, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided "
     required: false
@@ -22,9 +25,6 @@ inputs:
     required: false
   register_custom_variables:
     description: 'A comma-separated list of custom variables to register'
-    required: false
-  dump:
-    description: 'If `1`, it dumps the provided configuration'
     required: false
   docker_image_tag:
     description: 'Docker image tag created by upstream repository'
@@ -55,18 +55,20 @@ runs:
       run: $GITHUB_ACTION_PATH/entrypoint.sh
       shell: bash
       env:
-        MAPPINGS: ${{ inputs.mappings }}
-        IF_NO_MATCH_FAIL: ${{ inputs.if_no_match_fail }}
-        IF_WELL_KNOWN_VARS_MISSING_FAIL: ${{ inputs.if_well_known_vars_missing_fail }}
-        ENABLE_COMMIT: ${{ inputs.commit }}
-        COMMIT_TEMPLATE: ${{ inputs.commit_template }}
-        COMMITS_SPLIT_UP_BY: ${{ inputs.commits_split_up_by }}
-        UPDATED_FILE_SUFFIX: ${{ inputs.updated_file_suffix }}
-        REGISTER_CUSTOM_REGEXES: ${{ inputs.register_custom_regexes }}
-        REGISTER_CUSTOM_VARIABLES: ${{ inputs.register_custom_variables }}
-        DOCKER_IMAGE_TAG: ${{ inputs.docker_image_tag }}
-        DOCKER_IMAGE_TAG_REGEX: ${{ inputs.docker_image_tag_regex }}
-        GIT_TAG: ${{ inputs.git_tag }}
-        GIT_TAG_REGEX: ${{ inputs.git_tag_regex }}
-        GIT_BRANCH: ${{ inputs.git_branch }}
-        GIT_BRANCH_REGEX: ${{ inputs.git_branch_regex }}
+        INPUT_MAPPINGS: ${{ inputs.mappings }}
+        INPUT_DIRECTORY: ${{ inputs.directory }}
+        INPUT_DUMP: ${{ inputs.dump }}
+        INPUT_IF_NO_MATCH_FAIL: ${{ inputs.if_no_match_fail }}
+        INPUT_IF_WELL_KNOWN_VARS_MISSING_FAIL: ${{ inputs.if_well_known_vars_missing_fail }}
+        INPUT_ENABLE_COMMIT: ${{ inputs.commit }}
+        INPUT_COMMIT_TEMPLATE: ${{ inputs.commit_template }}
+        INPUT_COMMITS_SPLIT_UP_BY: ${{ inputs.commits_split_up_by }}
+        INPUT_UPDATED_FILE_SUFFIX: ${{ inputs.updated_file_suffix }}
+        INPUT_REGISTER_CUSTOM_REGEXES: ${{ inputs.register_custom_regexes }}
+        INPUT_REGISTER_CUSTOM_VARIABLES: ${{ inputs.register_custom_variables }}
+        INPUT_DOCKER_IMAGE_TAG: ${{ inputs.docker_image_tag }}
+        INPUT_DOCKER_IMAGE_TAG_REGEX: ${{ inputs.docker_image_tag_regex }}
+        INPUT_GIT_TAG: ${{ inputs.git_tag }}
+        INPUT_GIT_TAG_REGEX: ${{ inputs.git_tag_regex }}
+        INPUT_GIT_BRANCH: ${{ inputs.git_branch }}
+        INPUT_GIT_BRANCH_REGEX: ${{ inputs.git_branch_regex }}
