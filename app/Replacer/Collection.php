@@ -1,12 +1,13 @@
 <?php
 declare(strict_types=1);
-namespace App;
+namespace App\Replacer;
+use App\EnvironmentVariable;
 
-class ReplacerCollection
+class Collection
 {
 	private array $items = [];
 	
-	public function add(Replacer $replacer): ReplacerCollection
+	public function add(Replacer $replacer): Collection
 	{
 		$this->items[$replacer->name] = $replacer;
 		return $this;

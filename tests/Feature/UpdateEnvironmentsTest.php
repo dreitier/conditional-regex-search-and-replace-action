@@ -1,11 +1,11 @@
 <?php
 use App\ContentUpdater;
-use App\Mapping;
-use App\Variable;
-use App\Replacer;
-use App\VariableCollection;
-use App\ReplacerCollection;
-use App\MappingCollection;
+use App\Mapping\Mapping;
+use App\Variable\Variable;
+use App\Replacer\Replacer;
+use App\Variable\Collection as VariableCollection;
+use App\Replacer\Collection as ReplacerCollection;
+use App\Mapping\Collection as MappingCollection;
 use App\UpdateEnvironments;
 
 it('can update a single match in a file', function () {

@@ -1,10 +1,10 @@
 <?php
-use App\MappingCollection;
-use App\ReplacerCollection;
-use App\VariableCollection;
-use App\Replacer;
-use App\Variable;
-use App\Mapping;
+use App\Mapping\Collection as MappingCollection;
+use App\Replacer\Collection as ReplacerCollection;
+use App\Variable\Collection as VariableCollection;
+use App\Replacer\Replacer;
+use App\Variable\Variable;
+use App\Mapping\Mapping;
 
 test('single matcher can be configured', function () {
 	$variables = (new VariableCollection())->add(new Variable('docker_image_tag', '1.0.0'));

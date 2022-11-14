@@ -1,9 +1,5 @@
 <?php
-
 beforeEach(function() {
-	// mappings
-	putenv("MAPPINGS=docker_image_tag==main.* {OR} git_branch==main.* {OR} git_tag==dev {THEN_UPDATE_FILES} **dev/*.yaml=docker_image_tag_regex&my_custom_regex&custom_var_regex");
-	
 	// variables
 	// --- well-known variables
 	putenv("DOCKER_IMAGE_TAG=main-1.0.0");
@@ -40,7 +36,16 @@ if (has_tty() && !is_github()) {
 	});
 
 	it('can dump the active application configuration via artisan', function () {
-		$this->withoutMockingConsoleOutput()->artisan('update-environments --dump');//->assertExitCode(0);
+		$cmd = [
+			'update-environments',
+			'--dump',
+			'--custom-regexes=my_custom_regex,custom_var_regex',
+			'--custom-variables=custom_var',
+			'--directory=' . __DIR__ . '/environments',
+			'--mappings="docker_image_tag==main.* {OR} git_branch==main.* {OR} git_tag==dev {THEN_UPDATE_FILES} **dev/*.yaml=docker_image_tag_regex&my_custom_regex&custom_var_regex"',
+		];
+		
+		$this->withoutMockingConsoleOutput()->artisan(implode(" ", $cmd));//->assertExitCode(0);
 		$output = Artisan::output();
 		
 		// echo $output;
@@ -50,7 +55,7 @@ if (has_tty() && !is_github()) {
 			->toMatch('/git_branch.*\|.*main/')
 			->toMatch('/custom_var.*\|.*2.6.6/')
 			->toMatch('/docker_image_tag_regex.*\|.*imageTag.*/' /* regex with a regex */)
-			->toMatch('/\*\*dev\/\*\.yaml.*environments\/eu\/dev\/values\.yaml/')
+			->toMatch('/\*\*dev\/\*\.yaml.*environments\/dev\/values\.yaml/')
 			->toMatch('/docker_image_tag\s+\|\s+main\-1.0.0\s+|\s+main\.\*\|\s+Yes\s+\|.*/')
 		;
 	});

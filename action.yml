@@ -9,10 +9,13 @@ inputs:
     description: 'Directory, in which to operate. By default, the base directory is used'
     required: false
   if_well_known_vars_missing_fail:
-    description: "If 1, it fails if none of docker_image_tag, git_branch or git_tag is provided"
+    description: "If 1, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided "
     required: false
   if_no_match_fail:
-    description: 'If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `1`'
+    description: 'If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3`'
+    required: false
+  updated_file_suffix:
+    description: 'If set, any changes will be written to another file the path of the original file and that suffix'
     required: false
   register_custom_regexes:
     description: 'A comma-separated list of custom regular expressions to register'
@@ -41,6 +44,10 @@ inputs:
   git_branch_regex:
     description: 'Regular expression to modify occurences of Git branch in globbed files'
     required: false
+outputs:
+  total_modified_files:
+    description: 'Number of modified (target) files'
+
 runs:
   using: 'composite'
   steps:      
@@ -51,6 +58,10 @@ runs:
         MAPPINGS: ${{ inputs.mappings }}
         IF_NO_MATCH_FAIL: ${{ inputs.if_no_match_fail }}
         IF_WELL_KNOWN_VARS_MISSING_FAIL: ${{ inputs.if_well_known_vars_missing_fail }}
+        ENABLE_COMMIT: ${{ inputs.commit }}
+        COMMIT_TEMPLATE: ${{ inputs.commit_template }}
+        COMMITS_SPLIT_UP_BY: ${{ inputs.commits_split_up_by }}
+        UPDATED_FILE_SUFFIX: ${{ inputs.updated_file_suffix }}
         REGISTER_CUSTOM_REGEXES: ${{ inputs.register_custom_regexes }}
         REGISTER_CUSTOM_VARIABLES: ${{ inputs.register_custom_variables }}
         DOCKER_IMAGE_TAG: ${{ inputs.docker_image_tag }}

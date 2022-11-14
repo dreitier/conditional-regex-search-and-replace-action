@@ -23,6 +23,8 @@
 	},
     "require": {
         "php": "^8.0",
+        "czproject/git-php": "^4.0",
+        "illuminate/view": "^9.0",
         "laravel-zero/framework": "^9.2",
         "nunomaduro/termwind": "^1.14",
         "phlak/splat": "dev-master"

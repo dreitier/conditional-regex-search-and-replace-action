@@ -1,8 +1,12 @@
 <?php
 declare(strict_types=1);
-namespace App;
+namespace App\Mapping;
+use App\Variable\Collection as VariableCollection;
+use App\Replacer\Collection as ReplacerCollection;
+use App\EnvironmentVariable;
+use App\Util;
 
-class MappingCollection
+class Collection
 {
 	const MAPPING_SEPARATOR = "{THEN_UPDATE_FILES}";
 	const MATCHER_SEPARATOR = "{OR}";
@@ -75,7 +79,7 @@ class MappingCollection
 			
 			foreach ($referencedRegexReplacers as $referencedRegexReplacer) {
 				if ($referencedRegexReplacer == "*") {
-					$usedRegexReplacers = $this->replacers->values();
+					$usedRegexReplacers = $this->replacers->items();
 					break;
 				}
 				

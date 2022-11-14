@@ -1,5 +1,6 @@
 <?php
-use App\VariableCollection;
+use App\Variable\Variable;
+use App\Variable\Collection as VariableCollection;
 
 test('can detect default variables', function () {
 	putenv('DOCKER_IMAGE_TAG=latest');

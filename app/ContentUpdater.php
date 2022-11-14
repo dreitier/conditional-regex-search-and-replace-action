@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 namespace App;
-use App\Events\GenericEvent;
+use App\Events\LineModifiedEvent;
+use App\Events\LogEvent;
+use App\Variable\Variable;
+use App\Variable\Collection as VariableCollection;
 
 class ContentUpdater 
 {
@@ -9,7 +12,6 @@ class ContentUpdater
 		public readonly Variable $variable,
 		public readonly array $replacers = [],
 		public readonly VariableCollection $allVariables,
-		public readonly ?object $logger = null,
 	)
 	{
 	}
@@ -28,7 +30,7 @@ class ContentUpdater
 		$contentInEdit = $content;
 		
 		foreach ($this->replacers as $replacer) {
-			$this->logger?->info("      Replacing {$replacer->regex} with '{$this->variable->value}'");
+			LogEvent::info("      Replacing '/{$replacer->regex}/' with '{$this->variable->value}'");
 		
 			if (preg_match_all('/' . $replacer->regex . '/', $contentInEdit, $r)) {
 				$totalMatches = sizeof($r[0]);
@@ -41,14 +43,17 @@ class ContentUpdater
 						$variableName = $ctx->name;
 						
 						if (isset($r[$variableName])) {
-							$newLine = str_replace($r[$variableName][$i], $ctx->value, $newLine);
-							//GenericEvent::dispatch('content_updater.line_replaced', [$variableName, $ctx->value]);
+							$oldValue = $r[$variableName][$i];
+							$newValue = $ctx->value;
+							$newLine = str_replace($oldValue, $newValue, $newLine);
+							
+							LineModifiedEvent::dispatch($variableName, $oldValue, $newValue);
 						}
 					}
 					
 					$contentInEdit = str_replace($lineFound, $newLine, $contentInEdit);
 					
-					$this->logger?->info("      Converted /$lineFound/ to /$newLine/");
+					LogEvent::info("      Converted line '$lineFound' to '$newLine'");
 				}
 			}
 		}

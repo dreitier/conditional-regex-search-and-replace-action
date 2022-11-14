@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
-namespace App;
+namespace App\Variable;
+use App\EnvironmentVariable;
 
 /**
  * Container for holding all variable contexts
  */
-class VariableCollection
+class Collection
 {
 	private array $items = [];
 
@@ -16,7 +17,6 @@ class VariableCollection
 	];
 
 	public function __construct(
-		private readonly ?object $logger = null,
 		private readonly ?object $onMissingVariable = null,
 	) 
 	{
@@ -40,7 +40,12 @@ class VariableCollection
 		return array_keys($this->items);
 	}
 	
-	public function add(Variable $variable): VariableCollection
+	public function raw(): array
+	{
+		return $this->items;
+	}
+	
+	public function add(Variable $variable): Collection
 	{
 		$this->items[$variable->name] = $variable;
 		return $this;
@@ -57,7 +62,7 @@ class VariableCollection
 	 * @param array environmentVariableNames
 	 * @return VariableContexts
 	 */
-	public function locateAndMerge(array $environmentVariableNames = []): VariableCollection
+	public function locateAndMerge(array $environmentVariableNames = []): Collection
 	{
 		$r = collect(EnvironmentVariable::fromFriendlyNames($environmentVariableNames, $this->onMissingVariable))
 			->map(fn($item) => new Variable($item->friendlyName, $item->value))
@@ -77,7 +82,7 @@ class VariableCollection
 	 * @param array wellKnownVariables
 	 * @return VariableContexts
 	 */
-	public function mergeWellKnownVariables(?array $wellKnownVariables = []): VariableCollection
+	public function mergeWellKnownVariables(?array $wellKnownVariables = []): Collection
 	{
 		if (!$wellKnownVariables) {
 			$wellKnownVariables = self::WELL_KNOWN_VARIABLE_NAMES;

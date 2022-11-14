@@ -26,8 +26,9 @@ with:
 | Argument | Default | Description |
 | --- | --- | --- |
 | `directory` | `$CWD` | Directory, in which to operate. By default, the base directory is used. |
-| `if_no_match_fail` | `0` | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `1` |
-| `if_well_known_vars_missing_fail`| `0` | If `1`, it fails if none of docker_image_tag, git_branch or git_tag is provided |
+| `if_no_match_fail` | `0` | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3` |
+| `if_well_known_vars_missing_fail`| `0` | If `1`, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided |
+| `updated_file_suffix` | `<none>` | If set, any changes will be written to another file the path of the original file and that suffix |
 | `register_custom_regexes` | `<none>` | A comma-separated list of custom regular expressions to register |
 | `register_custom_variables` | `<none>` | A comma-separated list of custom variables to register |
 | `dump` | `<none>` | If `1`, it dumps the provided configuration | 
@@ -96,6 +97,12 @@ env:
   CUSTOMER_NUMBER: "555"
   PROJECT_ID: "5550555
 ```
+
+### Outputs
+
+| Output | Default | Description |
+| --- | --- | --- |
+| `total_modified_files` | `0` | Number of modified (target) files. |
 
 ## Examples
 ### Updating strings in multiple files

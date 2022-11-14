@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
-namespace App;
+namespace App\Variable;
 
-class Replacer {
+class Variable
+{
 	public function __construct(
 		public readonly string $name,
-		public readonly string $regex,
+		public readonly string $value,
 	)
 	{
 	}

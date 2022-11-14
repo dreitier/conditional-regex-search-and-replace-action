@@ -1,11 +1,12 @@
 <?php
 use App\ContentUpdater;
-use App\Variable;
-use App\Replacer;
-use App\VariableCollection;
-use App\ReplacerCollection;
+use App\Variable\Variable;
+use App\Replacer\Replacer;
+use App\Variable\Collection as VariableCollection;
+use App\Replacer\Collection as ReplacerCollection;
+use Illuminate\Support\Facades\Event;
 
-test('can replace a single variable', function () {
+it('can replace a single variable', function () {
 	$variable = new Variable('docker_image_tag', '1.0.0');
 	
 	$variables = new VariableCollection();
@@ -33,7 +34,7 @@ CONTENT
 );
 });
 
-test('can replace the same variable multiple times', function () {
+it('can replace the same variable multiple times', function () {
 	$variable = new Variable('docker_image_tag', '1.0.0');
 	
 	$variables = new VariableCollection();
@@ -64,7 +65,7 @@ CONTENT
 );
 });
 
-test('can reference another variable', function () {
+it('can reference another variable', function () {
 	$variable = new Variable('docker_image_tag', '1.0.0');
 	$otherVar = new Variable('custom_var', '4.0.0');
 	
