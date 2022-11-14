@@ -49,26 +49,5 @@ outputs:
     description: 'Number of modified (target) files'
 
 runs:
-  using: 'composite'
-  steps:      
-    - id: conditional-regex-search-and-replace
-      run: $GITHUB_ACTION_PATH/entrypoint.sh
-      shell: bash
-      env:
-        INPUT_MAPPINGS: ${{ inputs.mappings }}
-        INPUT_DIRECTORY: ${{ inputs.directory }}
-        INPUT_DUMP: ${{ inputs.dump }}
-        INPUT_IF_NO_MATCH_FAIL: ${{ inputs.if_no_match_fail }}
-        INPUT_IF_WELL_KNOWN_VARS_MISSING_FAIL: ${{ inputs.if_well_known_vars_missing_fail }}
-        INPUT_ENABLE_COMMIT: ${{ inputs.commit }}
-        INPUT_COMMIT_TEMPLATE: ${{ inputs.commit_template }}
-        INPUT_COMMITS_SPLIT_UP_BY: ${{ inputs.commits_split_up_by }}
-        INPUT_UPDATED_FILE_SUFFIX: ${{ inputs.updated_file_suffix }}
-        INPUT_REGISTER_CUSTOM_REGEXES: ${{ inputs.register_custom_regexes }}
-        INPUT_REGISTER_CUSTOM_VARIABLES: ${{ inputs.register_custom_variables }}
-        INPUT_DOCKER_IMAGE_TAG: ${{ inputs.docker_image_tag }}
-        INPUT_DOCKER_IMAGE_TAG_REGEX: ${{ inputs.docker_image_tag_regex }}
-        INPUT_GIT_TAG: ${{ inputs.git_tag }}
-        INPUT_GIT_TAG_REGEX: ${{ inputs.git_tag_regex }}
-        INPUT_GIT_BRANCH: ${{ inputs.git_branch }}
-        INPUT_GIT_BRANCH_REGEX: ${{ inputs.git_branch_regex }}
+  using: 'docker'
+  image: 'Dockerfile'
