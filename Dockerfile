@@ -1,6 +1,7 @@
 FROM php:8.1-cli
 
-RUN apt-get update && apt-get install -y git php-zip
+RUN apt-get update && apt-get install -y git
+RUN docker-php-ext-enable zip; true
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer and set up application
