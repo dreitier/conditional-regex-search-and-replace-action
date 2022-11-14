@@ -62,6 +62,31 @@ if [ "$INPUT_REGISTER_CUSTOM_VARIABLES" != "" ]; then
 	REGISTER_CUSTOM_VARIABLES=--custom-variables=$REGISTER_CUSTOM_VARIABLES
 fi
 
+# export default environment variables
+if [ "$INPUT_DOCKER_IMAGE_TAG" != "" ]; then
+	export DOCKER_IMAGE_TAG=$INPUT_DOCKER_IMAGE_TAG
+fi
+
+if [ "$INPUT_DOCKER_IMAGE_TAG_REGEX" != "" ]; then
+	export DOCKER_IMAGE_TAG_REGEX=$INPUT_DOCKER_IMAGE_TAG_REGEX
+fi
+
+if [ "$INPUT_GIT_TAG" != "" ]; then
+	export GIT_TAG=$INPUT_GIT_TAG
+fi
+
+if [ "$INPUT_GIT_TAG_REGEX" != "" ]; then
+	export GIT_TAG_REGEX=$INPUT_GIT_TAG_REGEX
+fi
+
+if [ "$INPUT_GIT_BRANCH" != "" ]; then
+	export GIT_BRANCH=$INPUT_GIT_BRANCH
+fi
+
+if [ "$INPUT_GIT_BRANCH_REGEX" != "" ]; then
+	export GIT_BRANCH_REGEX=$INPUT_GIT_BRANCH_REGEX
+fi
+
 # the followings quotes the named parameter --mappings (and others) properly:
 # ${MAPPINGS:+"$MAPPINGS"}
 $SCRIPTPATH/application update-environments \
