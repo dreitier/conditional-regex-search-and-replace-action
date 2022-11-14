@@ -90,6 +90,7 @@ fi
 # the followings quotes the named parameter --mappings (and others) properly:
 # ${MAPPINGS:+"$MAPPINGS"}
 $SCRIPTPATH/application update-environments \
+	$IS_GITHUB \
 	${MAPPINGS:+"$MAPPINGS"} \
 	${DIRECTORY:+"$DIRECTORY"} \
 	${DUMP} \
