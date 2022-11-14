@@ -1,7 +1,4 @@
-#!/bin/env bash
-
-set -x
-
+#!/usr/bin/env bash
 SCRIPT="$(readlink --canonicalize-existing "$0")"
 SCRIPTPATH="$(dirname "$SCRIPT")"
 
