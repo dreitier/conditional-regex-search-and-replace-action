@@ -1,8 +1,8 @@
 # conditional-regex-search-and-replace-action
-This action executes conditional search and replace operations on a set of files. Strings in files are replaced when they match given regular expressions.
+This GitHub action executes conditional search and replace operations on multiple files. Strings in files are replaced, if they match a given regular expressions.
 
-Originally, this action was created to update parameters (like Docker image tag and Git branch) in Helm charts and Kustomize templates in GitOps repositories.
-When using the [environment-per-folder strategy](https://dreitier.com/knowledge-base/continuous-delivery-and-deployment/using-environment-per-folder-directory-structure-for-gitops-projects-with-argo-cd-and-helm), locating the environments to update can be cumbersome.
+Originally, this action has been created to update strings - like Docker image tag and Git branches - in Helm charts and Kustomize templates inside of Git repositories used for GitOps projects.
+When using the [environment-per-folder strategy](https://dreitier.com/knowledge-base/continuous-delivery-and-deployment/using-environment-per-folder-directory-structure-for-gitops-projects-with-argo-cd-and-helm), updating the designated file for one or multiple environments can be cumbersome.
 If you want to use this action indeed for updating GitOps repositories, please look at [this article]() on how to execute it with `repository.dispatch`.
 
 ## Usage
