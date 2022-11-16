@@ -23,15 +23,19 @@ with:
 | `mappings` | DSL to define search-and-replace operations, see below |
 
 ### Optional arguments
-| Argument | Default | Description |
-| --- | --- | --- |
-| `directory` | `$CWD` | Directory, in which to operate. By default, the base directory is used. |
-| `dump` | `<none>` | If `1`, it dumps the provided configuration | 
-| `if_no_match_fail` | `0` | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3` |
-| `if_well_known_vars_missing_fail`| `0` | If `1`, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided |
-| `updated_file_suffix` | `<none>` | If set, any changes will be written to another file the path of the original file and that suffix |
-| `register_custom_regexes` | `<none>` | A comma-separated list of custom regular expressions to register |
-| `register_custom_variables` | `<none>` | A comma-separated list of custom variables to register |
+| Argument                          | Default | Description                                                                                                                                             |
+|-----------------------------------| --- |---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `directory`                       | `$CWD` | Directory, in which to operate. By default, the base directory is used.                                                                                 |
+| `dump`                            | `<none>` | If `1`, it dumps the provided configuration                                                                                                             | 
+| `if_no_match_fail`                | `0` | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3`                                                  |
+| `if_well_known_vars_missing_fail` | `0` | If `1`, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided                                                      |
+| `updated_file_suffix`             | `<none>` | If set, any changes will be written to another file the path of the original file and that suffix                                                       |
+| `register_custom_regexes`         | `<none>` | A comma-separated list of custom regular expressions to register                                                                                        |
+| `register_custom_variables`       | `<none>` | A comma-separated list of custom variables to register                                                                                                  |
+| `commit`                          | `0` | If there has been any modified files (see below, `outputs.total_modified_files`), it will commit the changes to the Git repository                      |
+| `commit_template`                 | `<none>` | Template to use for the commit message. You can use the [Blade template engine](https://laravel.com/docs/9.x/blade) to dynamically specify the message. |
+| `committer_name`                  | `<none>` | Name of committer, only relevant if `commit` is present                                                                                                 |
+| `committer_email`                 | `<none>` | E-mail of committer, only relevant if `commit` is present                                                                                                            |
 
 ### Well-known variables and regular expressions
 Due the original requirement of this action, you can use the following GitOps-related arguments:
@@ -85,24 +89,141 @@ env:
   CUSTOMER_NUMBER: "555"
 ```
 
-To register mulitple variables, use a comma (`,`) for separation:
+To register multiple variables, use a comma (`,`) for separation:
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
 with:
   # ...
   register_custom_variables: customer_number, project_id
-customer_number
 env:
   CUSTOMER_NUMBER: "555"
   PROJECT_ID: "5550555
 ```
 
+#### Git commit message templates
+When using `commit_template`, you can either put in some static string or you can use the [Blade template engine](https://laravel.com/docs/9.x/blade) to dynamically specify the message.
+Each of the well-known and custom variables is passed as variable to the template. If you have a custom variable `customer_number`, you can access the value with `{{ $customer_number }}`.
+
+Use a static string:
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+with:
+  # ...
+  commit_template: 'A new version has been born.'
+```
+
+Reference a well-known variable:
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+with:
+  # ...
+  docker_image_tag: '1.0.0'
+  commit_template: 'chore: Update to Docker image tag {{ $docker_image_tag }}'
+```
+
+Reference a custom variable:
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+with:
+  # ...
+  register_custom_variables: customer_number
+  docker_image_tag: '1.0.0'
+  commit_template: 'chore: Update to Docker image tag {{ $docker_image_tag } for customer {{ $customer_number))'
+env:
+    CUSTOMER_NUMBER: "555" # or set it to an empty string
+```
+
+Expressions:
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+with:
+  # ...
+  register_custom_variables: customer_number
+  docker_image_tag: '1.0.0'
+  commit_template: 'chore: Update to Docker image tag {{ $docker_image_tag }}@if(!empty($customer_number)) for customer {{ $customer_number }}@endif'
+env:
+    CUSTOMER_NUMBER: "" # or a non-empty string
+```
+
+#### Mappings
+Mappings specify, if one or multiple regular expressions match, how other regular expressions are applied. It's basically
+
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+with:
+  mappings: '<if_first_regex_match> OR <if_second_regex_match> {THEN_UPDATE_FILES} <change_first_file_group>=<apply_regex_1> {AND} <change_second_file_group>=<apply_regex_1>&<apply_regex_2>'
+```
+
+In each regular expression to apply, you have access to all well-known and custom variables through named capturing groups:
+
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+  register_custom_variables: customer_number
+  register_custom_regexes: my_regex
+  docker_image_tag: '1.0.0'
+  docker_image_tag_regex: 'imageTag: \"(?<docker_image_tag).*)\"'
+  mappings: 'docker_image_tag==.* {THEN_UPDATE_FILES} **.yaml=docker_image_tag_regex&my_regex'
+env:
+  CUSTOMER_NUMBER: "555"
+  MY_REGEX: '.*customer: \"(?<customer_number>.*)\".*'
+```
+
 ### Outputs
 
-| Output | Default | Description |
-| --- | --- | --- |
-| `total_modified_files` | `0` | Number of modified (target) files. |
+| Output | Default | Description                                        |
+| --- | --- |----------------------------------------------------|
+| `total_modified_files` | `0` | Number of modified (target) files.                 |
+| `$your_variable` | `` | Any of your provded well-known or custom variables |
+
+You can reference the output variables in your GitHub Action workflow like this:
+
+```yaml
+jobs:
+  my_job_with_dedicated_commit_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update repository  
+        id: search_and_replace_op
+        uses: dreitier/conditional-regex-search-and-replace-action
+        with:
+          # ...
+
+      # instead of using this action's commit hook, we use the more flexible EndBug/add-and-commit if any file has been modified
+      - name: Commit and push
+        if: ${{ steps.search_and_replace.outputs.total_modified_files >= 1 }}
+        uses: EndBug/add-and-commit@v7
+        with:
+          author_name: build@internalcom
+          author_email: build@internal
+          message: "There have been {{ steps.search_and_replace.outputs.total_modified_files }} modified files"
+```
+
+To access e.g. the `customer_number` from before
+
+```yaml
+jobs:
+  my_job_with_dedicated_commit_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update repository
+        id: search_and_replace_op
+        uses: dreitier/conditional-regex-search-and-replace-action
+        with:
+          register_custom_variables: customer_number
+          docker_image_tag: '1.0.0'
+          # ...
+        env:
+            CUSTOMER_NUMBER: "555"
+
+      - name: Commit and push
+        if: ${{ steps.search_and_replace.outputs.total_modified_files >= 1 }}
+        uses: EndBug/add-and-commit@v7
+        with:
+          author_name: build@internal
+          author_email: build@internal
+          message: "Customer number {{ steps.search_and_replace.outputs.customer_number }} has {{ steps.search_and_replace.outputs.total_modified_files }} modified files for tag {{ steps.search_and_replace.outputs.docker_image_tag }}"
+```
 
 ## Examples
 ### Updating strings in multiple files
@@ -111,18 +232,18 @@ In a folder structure like this
 ```
 .
 +-- asia
-¦   +-- dev
-¦   ¦   +-- values.yaml
-¦   +-- prod
-¦       +-- values.yaml
+ï¿½ï¿½ï¿½ +-- dev
+ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ +-- values.yaml
+ï¿½ï¿½ï¿½ +-- prod
+ï¿½ï¿½ï¿½     +-- values.yaml
 +-- eu
     +-- dev
-    ¦   +-- values.yaml
-    ¦   +-- values.yaml.new
+    ï¿½ï¿½ï¿½ +-- values.yaml
+    ï¿½ï¿½ï¿½ +-- values.yaml.new
     +-- prod
 ```
 
-the files `eu/dev/values.yaml` and `asia/dev/values.yaml` would be modified. The content of both `values.yaml` files looks like this:
+the files `eu/dev/values.yaml` and `asia/dev/values.yaml` have be modified. The original content of both `values.yaml` files looks like this:
 
 ```yaml
 custom_parameter: custom_value
@@ -130,7 +251,7 @@ imageTag: v0.1.0
 other_parameter: other_custom_value
 ```
 
-We want to update the `imageTag` value in both `values.yaml` files to `v0.2.0`:
+We want to update the `imageTag` value in both `values.yaml` files from `v0.1.0` to `v0.2.0`:
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
@@ -149,6 +270,7 @@ other_parameter: other_custom_value
 ```
 
 #### Transformed into pseudo code
+Sometimes it's easier to read pseudo code instead of skimming through YAML files. The above YAML's definition can be read as
 ```
 if $docker_image_tag =~ /v.*/ then
     $files = glob_files_with_matcher("**dev/values.yaml")
@@ -165,7 +287,7 @@ endif
 ```
 
 ### Updating multiple values at the same time
-When you need to apply multiple regexes at the same time, you can chain those with:
+When you need to apply multiple regexes at the same time, you can chain those regexes with:
 
 ```yaml
 with:
@@ -243,7 +365,7 @@ endif
 ```
 
 ### Multiple mappings
-This action's DSL for defining mappings does __not__ feature a `{AND}` condition. Instead, you can chain multiple mappings together. Use De Morgan's law for complex conditions ;-)
+This action's DSL for defining mappings does __not__ feature a `{AND}` condition in the left-hand part of `{THEN_UPDATE_FILES}`. Instead, you can chain multiple mappings together. Use De Morgan's law for complex conditions ;-)
 Each of those mappings will be separately evaluated:
 
 ```yaml
@@ -293,12 +415,16 @@ Using Argo CD Image Updater is totally fine but might have some drawbacks:
 
 When using `conditional-regex-search-and-replace-action`, you can either configure Webhooks in your GitOps repository to notify Argo CD or let Argo CD pull the latest version.
 
-### Why are you not using Bash for this action?
+### Why are you not using Bash/$your_favorite_language_here for this action?
 Before introducing this action, I've developed a Bash script for updating various GitOps repositories. Different projects had different requirements: The Bash script was no longer maintainable.
 Using Laravel Zero and Pest for developing testable GitHub Actions looks fine to me.
 
+### But I can do this with awk & sed.
+Just keep using `awk` & `sed`, it's fine!
+
 ### Why looks the DSL like it does?
 Due to the nature of complexity and how parameters are passed from the GitHub workflow to single actions, it was the first approach I came up with.
+I also thought about using Blade templates for doing the mapping stuff.
 
 ## DSL spec
 
@@ -319,3 +445,12 @@ replacers               = replacer (',' replacer)+
 mapping                 = matchers if_match_then_execute replacers
 multiple_mappings       = mapping (next_mapping mapping)+
 ```
+
+## Support
+This software is provided as-is. You can open an issue in GitHub's issue tracker at any time. But we can't promise to get it fixed in the near future. If you need professionally support, consulting or a dedicated feature, please get in contact with us through our website.
+
+## Contribution
+Feel free to provide a pull request.
+
+## License
+This project is licensed under the MIT License - see the LICENSE.md file for details.
