@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Git;
+namespace App\Github;
 
 use App\Events\FileContentUpdateBeginEvent;
 use App\Events\FileContentUpdateFinishEvent;
@@ -14,85 +14,63 @@ use App\Variable\Collection as VariableCollection;
 use App\Events\AfterAllFilesProcessed;
 use Illuminate\Support\Facades\Event;
 
-class CommitTask
+class GithubTask
 {
+    const ENV_VAR_FOR_VARIABLE_PATH = "GITHUB_OUTPUT";
+
+    private ?string $path = null;
+
     public function __construct(
-        public readonly Options            $options,
         public readonly VariableCollection $variables,
     )
     {
-    }
+        $path = getenv(self::ENV_VAR_FOR_VARIABLE_PATH);
 
-    public function commit(AfterAllFilesProcessed $afterAllFilesProcessed)
-    {
-        $relevantFiles = $afterAllFilesProcessed->getModifiedFiles();
-
-        if (sizeof($relevantFiles) == 0) {
-            LogEvent::info("Not doing a Git commit as no target file content has been modified");
+        if (!$path) {
+            LogEvent::warn('Environment variable "' . self::ENV_VAR_FOR_VARIABLE_PATH . '" is not available, but --github has been provided. Can not set output variables.');
             return;
         }
 
-        $context = $this->options->createContext();
+        $this->path = $path;
+    }
 
-        try {
-            // pushd to working directory
-            $repository = $context->open();
+    const TOTAL_MODIFIED_FILES = 'total_modified_files';
 
-            foreach ($relevantFiles as $modifiedFile) {
-                $relativePath = str_replace($context->getWorkingDirectory(), "", $modifiedFile->targetFile);
+    private function exportVariable($key, $value) {
+        if (!$this->path) {
+            return;
+        }
 
-                if ($relativePath[0] = "/") {
-                    $relativePath = substr($relativePath, 1, strlen($relativePath) - 1);
-                }
+        LogEvent::debug('Exporting variable "' . $key . '=' . $value . '" to "' . $this->path . '"');
+        file_put_contents($this->path, $key . '=' . $value, FILE_APPEND);
+    }
 
-                LogEvent::debug("[git] Adding file $relativePath");
-                $repository->addFile($relativePath);
-            }
+    public function exportVariables(AfterAllFilesProcessed $afterAllFilesProcessed)
+    {
+        $total = sizeof($afterAllFilesProcessed->getModifiedFiles());
+        // export stats
+        $this->exportVariable(self::TOTAL_MODIFIED_FILES, (int)$total);
 
-            $commitMessage = $this->options->renderCommitMessage($this->variables);
-            LogEvent::info("Creating Git commit with message '$commitMessage'");
-            $repository->commit($commitMessage);
-            LogEvent::info("Git commit executed");
-        } catch (\Exception $e) {
-            LogEvent::warn("Failed to commit: " . $e->getMessage());
-
-            if ($e instanceof \CzProject\GitPhp\GitException) {
-                if (null !== ($runnerResult = $e->getRunnerResult())) {
-                    LogEvent::debug("[git] command: " . $runnerResult->getCommand());
-                    LogEvent::debug("[git] exit-code: " . $runnerResult->getExitCode());
-                    LogEvent::debug("[git] output: " . $runnerResult->toText());
-                }
-            }
-        } finally {
-            // popd from working directory to previous cwd
-            $context->close();
+        // export (custom) variables, provided by user
+        foreach ($this->variables->items() as $customVariable) {
+            $this->exportVariable($customVariable->name, $customVariable->value);
         }
     }
 
     public static function configure(\Illuminate\Console\Command $command,
-                                     FilesystemContext           $filesystem,
                                      VariableCollection          $variables)
     {
-        if (!$command->option('commit')) {
+        if (!$command->option("github")) {
             return;
         }
 
-        $options = new GitCommitOptions(
-            $filesystem,
-            $command->option('commit-template') ?? 'chore: @if(isset($docker_image_tag))bumped docker image tag to {{ $docker_image_tag->value }}@endif',
-            $command->option('commit-split-up-by') ?? '*',
-            $command->option('committer-name') ?? null,
-            $command->option('committer-email') ?? null,
-        );
+        LogEvent::info("Enabling GitHub Actions support");
 
-        $commitTask = new CommitTask(
-            $options,
-            $variables,
-        );
+        $githubTask = new GithubTask($variables);
 
         Event::listen(
             AfterAllFilesProcessed::class,
-            [$commitTask, 'commit']
+            [$githubTask, 'exportVariables']
         );
     }
 }
