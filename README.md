@@ -230,17 +230,15 @@ jobs:
 
 In a folder structure like this
 ```
-.
-+-- asia
-��� +-- dev
-��� ��� +-- values.yaml
-��� +-- prod
-���     +-- values.yaml
-+-- eu
-    +-- dev
-    ��� +-- values.yaml
-    ��� +-- values.yaml.new
-    +-- prod
+├── asia
+│   ├── dev
+│   │   ├── values.yaml
+│   └── prod
+│       ├── values.yaml
+├── eu
+│   ├── dev
+│   │   └── values.yaml
+│   └── prod
 ```
 
 the files `eu/dev/values.yaml` and `asia/dev/values.yaml` have be modified. The original content of both `values.yaml` files looks like this:
@@ -435,13 +433,18 @@ glob                    = $valid_glob
 regex                   = $valid_quoted_regex
 variable_reference      = (lower_case_chars | digits | '_')+
 regex_reference         = (lower_case_chars | digits | '_')+
-matcher                 = variable_reference "==" regex
+
+matches                 = "=="
+matcher                 = variable_reference matches regex
 or_matcher              = "{OR}"
 matchers                = matcher (or_matcher matcher)+
 
 regex_references        = regex_reference ('&' regex_reference)+
-replacer                = glob '=' regex_references
-replacers               = replacer (',' replacer)+
+assign_to               = '='
+replacer                = glob assign_to regex_references
+replacers               = replacer (and_replacer replacer)+
+and_replacer            = "{AND}"
+
 mapping                 = matchers if_match_then_execute replacers
 multiple_mappings       = mapping (next_mapping mapping)+
 ```
