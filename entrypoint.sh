@@ -22,6 +22,7 @@ if [ "$INPUT_DUMP" = "1" ]; then
 	DUMP=--dump
 fi
 
+# stricts
 IF_NO_MATCH_FAIL=
 if [ "$INPUT_IF_NO_MATCH_FAIL" = "1" ]; then
 	IF_NO_MATCH_FAIL=--require-at-least-one-change
@@ -32,10 +33,21 @@ if [ "$INPUT_IF_WELL_KNOWN_VARS_MISSING_FAIL" = "1" ]; then
 	IF_WELL_KNOWN_VARS_MISSING_FAIL=--require-one-well-known-var
 fi
 
+# do Git commits
 ENABLE_COMMIT=
 if [ "$INPUT_ENABLE_COMMIT" = "1" ]; then
 	ENABLE_COMMIT=--commit
-fi 
+fi
+
+COMMITTER_NAME=
+if [ "$INPUT_COMMITTER_NAME" != "" ]; then
+    COMMITTER_NAME=--committer-name=$INPUT_INPUT_COMMITTER_NAME
+fi
+
+COMMITTER_EMAIL=
+if [ "$INPUT_COMMITTER_EMAIL" != "" ]; then
+    COMMITTER_EMAIL=--committer-email=$INPUT_INPUT_COMMITTER_EMAIL
+fi
 
 COMMIT_TEMPLATE=
 if [ "$INPUT_COMMIT_TEMPLATE" != "" ]; then
@@ -47,11 +59,13 @@ if [ "$INPUT_COMMITS_SPLIT_UP_BY" != "" ]; then
 	COMMITS_SPLIT_UP_BY=--commit-split-up-by=$COMMITS_SPLIT_UP_BY
 fi
 
+# backup files
 UPDATED_FILE_SUFFIX=
 if [ "$INPUT_UPDATED_FILE_SUFFIX" != "" ]; then
 	UPDATED_FILE_SUFFIX=--updated-file-suffix=$UPDATED_FILE_SUFFIX
 fi
 
+# custom regexes and variables
 REGISTER_CUSTOM_REGEXES=
 if [ "$INPUT_REGISTER_CUSTOM_REGEXES" != "" ]; then
 	REGISTER_CUSTOM_REGEXES=--custom-regexes=$REGISTER_CUSTOM_REGEXES
@@ -97,9 +111,10 @@ $SCRIPTPATH/application update-environments \
 	${IF_NO_MATCH_FAIL} \
 	${IF_WELL_KNOWN_VARS_MISSING_FAIL} \
 	${ENABLE_COMMIT} \
+	${COMMITTER_NAME:+"$COMMITTER_NAME"} \
+	${COMMITTER_EMAIL:+"$COMMITTER_EMAIL"} \
 	${COMMIT_TEMPLATE:+"$COMMIT_TEMPLATE"} \
 	${COMMITS_SPLIT_UP_BY:+"$COMMITS_SPLIT_UP_BY"} \
 	${UPDATED_FILE_SUFFIX:+"$UPDATED_FILE_SUFFIX"} \
 	${REGISTER_CUSTOM_REGEXES:+"$REGISTER_CUSTOM_REGEXES"} \
 	${REGISTER_CUSTOM_VARIABLES:+"$REGISTER_CUSTOM_VARIABLES"}
-	
