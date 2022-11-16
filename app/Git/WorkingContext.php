@@ -8,65 +8,56 @@ use App\Variable\Collection as VariableCollection;
 use CzProject\GitPhp\GitRepository;
 use Illuminate\Support\Facades\Blade;
 
-class Options
-{
-    public function __construct(
-        public readonly FilesystemContext $filesystem,
-        public readonly string            $commitMessageTemplate,
-        public readonly string            $splitCommitsByFile,
-        public readonly ?string           $committerName = null,
-        public readonly ?string           $committerEmail = null,
-    )
-    {
-    }
-
-    public function renderCommitMessage(VariableCollection $variables): string
-    {
-        $parsedTemplate = Blade::render($this->commitMessageTemplate, $variables->raw());
-        return $parsedTemplate;
-    }
-
-    public function createContext(): Context
-    {
-        return new Context($this);
-    }
-}
-
-class Context
+class WorkingContext
 {
     public function __construct(
         public readonly Options $options,
         public readonly Client  $client)
     {
+    }
 
+    public static function of(Options $options)
+    {
+        return new self($options, new Client());
     }
 
     private ?Repository $repository = null;
     private ?string $cwdBeforeOpen = null;
 
+    /**
+     * Changes the working directory to the repository path and sets user name and email if present.
+     * @return Repository
+     * @throws \Throwable
+     */
     public function open(): Repository
     {
         throw_if(!empty($this->repository), "repository already opened");
         $this->cwdBeforeOpen = getcwd();
-        chdir($this->getRepositoryDirectory());
+        chdir($this->getWorkingDirectory());
 
-        $repository = $this->client->open($this->getRepositoryDirectory());
+        $repository = $this->client->open($this->getWorkingDirectory());
+        $this->repository = $repository;
 
         if (!empty($this->options->committerName)) {
             $repository->setUserName($this->options->committerName);
         }
 
         if (!empty($this->options->committerEmail)) {
-            $repository->setUserName($this->options->committerEmail);
+            $repository->setUserEmail($this->options->committerEmail);
         }
 
-        $this->repository = $repository;
         return $this->repository;
     }
 
+    /**
+     * chdirs back to the previous working directory
+     *
+     * @return $this
+     * @throws \Throwable
+     */
     public function close()
     {
-        throw_if(empty($this->repository), "repository already closed");
+        throw_if(empty($this->repository), "Trying to close the repository even as it has been already closed.");
 
         chdir($this->cwdBeforeOpen);
         $this->cwdBeforeOpen = null;
@@ -74,7 +65,7 @@ class Context
         return $this;
     }
 
-    public function getRepositoryDirectory(): string
+    public function getWorkingDirectory(): string
     {
         return $this->options->filesystem->baseDirectory;
     }

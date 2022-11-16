@@ -26,6 +26,18 @@ inputs:
   register_custom_variables:
     description: 'A comma-separated list of custom variables to register'
     required: false
+  commit:
+    description: 'If there has been any modified files (see below, `outputs.total_modified_files`), it will commit the changes to the Git repository'
+    required: false
+  commit_template:
+    description: 'Template to use for the commit message. You can use the [Blade template engine](https://laravel.com/docs/9.x/blade) to dynamically specify the message.'
+    required: false
+  committer_name:
+    description: 'Name of committer if `commit` is present'
+    required: false
+  committer_email:
+    description: ' E-mail of committer if `commit` is present '
+    required: false
   docker_image_tag:
     description: 'Docker image tag created by upstream repository'
     required: false
