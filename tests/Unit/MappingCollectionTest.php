@@ -9,12 +9,12 @@ use App\Mapping\Mapping;
 test('single matcher can be configured', function () {
 	$variables = (new VariableCollection())->add(new Variable('docker_image_tag', '1.0.0'));
 	$replacers = (new ReplacerCollection())->add(new Replacer('my_replacer', 'some regex'));
-	
+
 	$sut = new MappingCollection($variables, $replacers);
 	$sut->upsert("docker_image_tag==main.* {THEN_UPDATE_FILES} environments/dev/values.yaml=my_replacer");
-	
+
 	$items = $sut->items();
-	
+
 	$this->assertEquals(1, sizeof($items));
 	$first = $items[0];
 	$this->assertEquals('docker_image_tag', $first->variable->name);
@@ -29,17 +29,17 @@ test('multiple matchers can be configured', function () {
 		->add(new Variable('git_branch', 'prod.bla'))
 		;
 	$replacers = (new ReplacerCollection())->add(new Replacer('my_replacer', 'some regex'));
-	
+
 	$sut = new MappingCollection($variables, $replacers);
 	$sut->upsert("docker_image_tag==main.* {OR} git_branch==prod.* {THEN_UPDATE_FILES} environments/dev/values.yaml=my_replacer");
-	
+
 	$items = $sut->items();
-	
+
 	$this->assertEquals(2, sizeof($items));
 	$first = $items[0];
 	$this->assertEquals('docker_image_tag', $first->variable->name);
 	$this->assertEquals('main.*', $first->regexToMatchValue);
-	
+
 	$second = $items[1];
 	$this->assertEquals('git_branch', $second->variable->name);
 	$this->assertEquals('prod.*', $second->regexToMatchValue);
@@ -53,18 +53,18 @@ test('multiple replacers can be configured', function () {
 	$replacers = (new ReplacerCollection())
 		->add(new Replacer('my_replacer', 'some regex'))
 		->add(new Replacer('my_replacer_2', 'some other regex'));
-	
+
 	$sut = new MappingCollection($variables, $replacers);
-	$sut->upsert("docker_image_tag==main.* {THEN_UPDATE_FILES} environments/dev/values.yaml=my_replacer, environments/qa/kustomize-overlay.yaml=my_replacer_2");
-	
+	$sut->upsert("docker_image_tag==main.* {THEN_UPDATE_FILES} environments/dev/values.yaml=my_replacer {AND} environments/qa/kustomize-overlay.yaml=my_replacer_2");
+
 	$items = $sut->items();
-	
+
 	$this->assertEquals(2, sizeof($items));
 	$first = $items[0];
 	$this->assertEquals('docker_image_tag', $first->variable->name);
 	$this->assertEquals('main.*', $first->regexToMatchValue);
 	$this->assertEquals('environments/dev/values.yaml', $first->glob);
-	
+
 	$second = $items[1];
 	$this->assertEquals('docker_image_tag', $second->variable->name);
 	$this->assertEquals('main.*', $second->regexToMatchValue);
