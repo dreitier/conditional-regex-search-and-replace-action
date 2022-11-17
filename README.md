@@ -3,7 +3,7 @@ This GitHub action executes conditional search and replace operations on multipl
 
 Originally, this action has been created to update strings - like Docker image tag and Git branches - in Helm charts and Kustomize templates inside of Git repositories used for GitOps projects.
 When using the [environment-per-folder strategy](https://dreitier.com/knowledge-base/continuous-delivery-and-deployment/using-environment-per-folder-directory-structure-for-gitops-projects-with-argo-cd-and-helm), updating the designated file for one or multiple environments can be cumbersome.
-If you want to use this action indeed for updating GitOps repositories, please look at [this article]() on how to execute it with `repository.dispatch`.
+If you want to use this action indeed for updating GitOps repositories, please look at [this article](https://dreitier.com/knowledge-base/continuous-delivery-and-deployment/promoting-new-docker-images-to-helm-charts-in-github-repositories-with-github-actions) on how to execute it with `repository_dispatch`.
 
 ## Usage
 
@@ -450,10 +450,10 @@ multiple_mappings       = mapping (next_mapping mapping)+
 ```
 
 ## Support
-This software is provided as-is. You can open an issue in GitHub's issue tracker at any time. But we can't promise to get it fixed in the near future. If you need professionally support, consulting or a dedicated feature, please get in contact with us through our website.
+This software is provided as-is. You can open an issue in GitHub's issue tracker at any time. But we can't promise to get it fixed in the near future. If you need professionally support, consulting or a dedicated feature, please get in contact with us through [our website](https://dreitier.com).
 
 ## Contribution
 Feel free to provide a pull request.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
