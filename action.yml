@@ -1,6 +1,9 @@
 name: 'Conditional regex search and replace'
 author: 'Christopher Klein'
 description: 'Executes conditional search and replace operations on a set of files. Strings are replaced by matching regular expressions.'
+branding:
+  icon: 'file-text'
+  color: 'orange'
 inputs:
   mappings:
     description: 'DSL to define search-and-replace operations'
