@@ -24,212 +24,216 @@ use function Termwind\{render};
 
 class UpdateEnvironmentsCommand extends Command
 {
-    /**
-     * The signature of the command.
-     *
-     * @var string
-     */
-    protected $signature = 'update-environments {--dump} {--mappings=} {--directory=.} {--github} {--require-one-well-known-var} {--require-at-least-one-change} {--commit} {--commit-template=} {--commit-split-up-by=} {--committer-name=} {--committer-email=} {--updated-file-suffix=} {--custom-regexes=} {--custom-variables=}';
+	/**
+	 * The signature of the command.
+	 *
+	 * @var string
+	 */
+	protected $signature = 'update-environments {--dump} {--mappings=} {--directory=.} {--github} {--require-one-well-known-var} {--require-at-least-one-change} {--commit} {--commit-template=} {--commit-split-up-by=} {--committer-name=} {--committer-email=} {--updated-file-suffix=} {--custom-regexes=} {--custom-variables=}';
 
-    /**
-     * The description of the command.
-     *
-     * @var string
-     */
-    protected $description = 'Update environments';
+	/**
+	 * The description of the command.
+	 *
+	 * @var string
+	 */
+	protected $description = 'Update environments';
 
-    /**
-     * Fail this command and exit
-     * @param string $msg
-     */
-    private function fail($msg, $exitCode = 1): int
-    {
-        $this->error($msg);
-        return $exitCode;
-    }
+	/**
+	 * Fail this command and exit
+	 * @param string $msg
+	 */
+	private function fail($msg, $exitCode = 1): int
+	{
+		$this->error($msg);
+		return $exitCode;
+	}
 
-    public function failOnOption($optionName, $exception, $exitCode = 2): ?int
-    {
-        $msg = $exception->getMessage();
+	public function failOnOption($optionName, $exception, $exitCode = 2): ?int
+	{
+		$msg = $exception->getMessage();
 
-        if ($this->option($optionName)) {
-            return $this->fail($msg, $exitCode);
-        }
+		if ($this->option($optionName)) {
+			return $this->fail($msg, $exitCode);
+		}
 
-        $this->warn($msg);
+		$this->warn($msg);
 		
 		return 0;
-    }
+	}
 
-    public function handleLog(LogEvent $event)
-    {
-        switch ($event->type) {
-            case 'warn':
-                $this->warn($event->message);
-                break;
-            case 'info':
-                $this->info($event->message);
-                break;
-            case 'debug':
-                $this->info('[DEBUG] ' . $event->message);
-                break;
-            default:
-                $this->fail($event->message, $event->errorCode);
-        }
-    }
+	public function handleLog(LogEvent $event)
+	{
+		switch ($event->type) {
+			case 'warn':
+				$this->warn($event->message);
+				break;
+			case 'info':
+				$this->info($event->message);
+				break;
+			case 'debug':
+				$this->info('[DEBUG] ' . $event->message);
+				break;
+			default:
+				$this->fail($event->message, $event->errorCode);
+		}
+	}
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        $variables = new VariableCollection(function ($variableName, $exception) {
-            $this->warn("ignoring $variableName: " . $exception->getMessage());
-        });
+	/**
+	 * Execute the console command.
+	 *
+	 * @return mixed
+	 */
+	public function handle()
+	{
+		$variables = new VariableCollection(function ($variableName, $exception) {
+			$this->warn("ignoring $variableName: " . $exception->getMessage());
+		});
 
-        $providedMappings = $this->option('mappings') ?? '';
+		foreach (['__true__', '__always__'] as $defaultVariable) {
+			$variables->add(Variable::of($defaultVariable, '1'));
+		}
 
-        if (empty($providedMappings)) {
-            $this->fail("No mappings provided");
-        }
+		$providedMappings = $this->option('mappings') ?? '';
 
-        $directory = $this->option('directory');
-        $suffixOfUpdatedFile = $this->option("updated-file-suffix") ?? '';
-        $filesystem = new FilesystemContext($directory, $suffixOfUpdatedFile);
+		if (empty($providedMappings)) {
+			$this->fail("No mappings provided");
+		}
 
-        if ($this->option('require-at-least-one-change')) {
-            Event::listen(
-                AfterAllFilesProcessed::class,
-                function (AfterAllFilesProcessed $afterAllFilesProcessed) {
-                    $total = sizeof($afterAllFilesProcessed->getModifiedFiles());
+		$directory = $this->option('directory');
+		$suffixOfUpdatedFile = $this->option("updated-file-suffix") ?? '';
+		$filesystem = new FilesystemContext($directory, $suffixOfUpdatedFile);
 
-                    if ($total == 0) {
-                        LogEvent::fatal("At least one change should be made, but have done nothing", 3);
-                    }
-                }
-            );
-        }
+		if ($this->option('require-at-least-one-change')) {
+			Event::listen(
+				AfterAllFilesProcessed::class,
+				function (AfterAllFilesProcessed $afterAllFilesProcessed) {
+					$total = sizeof($afterAllFilesProcessed->getModifiedFiles());
 
-        Event::listen(
-            LogEvent::class,
-            [$this, 'handleLog']
-        );
+					if ($total == 0) {
+						LogEvent::fatal("At least one change should be made, but have done nothing", 3);
+					}
+				}
+			);
+		}
 
-        // configure GitHub, if running in GitHub
-        GithubTask::configure($this, $variables);
-        // config Git commit, if set
-        CommitTask::configure($this, $filesystem, $variables);
+		Event::listen(
+			LogEvent::class,
+			[$this, 'handleLog']
+		);
 
-        $customRegexes = Util::trimmedExplode(',', $this->option('custom-regexes'));
-        $customVariables = Util::trimmedExplode(',', $this->option('custom-variables'));
+		// configure GitHub, if running in GitHub
+		GithubTask::configure($this, $variables);
+		// config Git commit, if set
+		CommitTask::configure($this, $filesystem, $variables);
 
-        try {
-            $variables = $variables->mergeWellKnownVariables();
+		$customRegexes = Util::trimmedExplode(',', $this->option('custom-regexes'));
+		$customVariables = Util::trimmedExplode(',', $this->option('custom-variables'));
 
-            if (!empty($customVariables)) {
-                $variables->locateAndMerge($customVariables);
-            }
-        } catch (MissingWellKnownVariableException $e) {
-            $this->failOnOption("require-one-well-known-var", $e, 2);
-        } catch (\Exception $e) {
-            return $this->fail($e->getMessage());
-        }
+		try {
+			$variables = $variables->mergeWellKnownVariables();
 
-        $replacers = new ReplacerCollection();
-        $possibleReplacerNames = array_unique(
-            array_merge(
-                collect($variables->variableNames())
-                    ->map(fn($item) => $item . "_regex")
-                    ->toArray(),
-                $customRegexes
-            ),
-            SORT_REGULAR
-        );
+			if (!empty($customVariables)) {
+				$variables->locateAndMerge($customVariables);
+			}
+		} catch (MissingWellKnownVariableException $e) {
+			$this->failOnOption("require-one-well-known-var", $e, 2);
+		} catch (\Exception $e) {
+			return $this->fail($e->getMessage());
+		}
 
-        $replacers->mergeFromEnvironment($possibleReplacerNames);
+		$replacers = new ReplacerCollection();
+		$possibleReplacerNames = array_unique(
+			array_merge(
+				collect($variables->variableNames())
+					->map(fn($item) => $item . "_regex")
+					->toArray(),
+				$customRegexes
+			),
+			SORT_REGULAR
+		);
 
-        $mappings = new MappingCollection($variables, $replacers);
-        $mappings->upsert($providedMappings);
+		$replacers->mergeFromEnvironment($possibleReplacerNames);
 
-        $updateEnvironments = new UpdateEnvironments($mappings, $variables, $directory, $suffixOfUpdatedFile);
+		$mappings = new MappingCollection($variables, $replacers);
+		$mappings->upsert($providedMappings);
 
-        if ($this->option("dump")) {
-            $this->dump($variables, $replacers, $mappings, $updateEnvironments);
-            return;
-        }
+		$updateEnvironments = new UpdateEnvironments($mappings, $variables, $directory, $suffixOfUpdatedFile);
 
-        $updateEnvironments->process();
-    }
+		if ($this->option("dump")) {
+			$this->dump($variables, $replacers, $mappings, $updateEnvironments);
+			return;
+		}
 
-    private function dump(
-        VariableCollection $variables,
-        ReplacerCollection $replacers,
-        MappingCollection  $mappings,
-        UpdateEnvironments $updateEnvironments
-    )
-    {
-        $this->info("Available variables from environment:");
-        $this->table(['Name', 'Value'], collect($variables->items())->map(fn($item) => [$item->name, $item->value])->toArray());
+		$updateEnvironments->process();
+	}
 
-        $this->info("");
-        $this->info("Available replacers from environment:");
-        $this->table(['Name', 'Regex'], collect($replacers->items())->map(fn($item) => [$item->name, $item->regex])->toArray());
+	private function dump(
+		VariableCollection $variables,
+		ReplacerCollection $replacers,
+		MappingCollection  $mappings,
+		UpdateEnvironments $updateEnvironments
+	)
+	{
+		$this->info("Available variables from environment:");
+		$this->table(['Name', 'Value'], collect($variables->items())->map(fn($item) => [$item->name, $item->value])->toArray());
 
-        $this->info("");
-        $this->info("Specified globs:");
-        $files = [];
+		$this->info("");
+		$this->info("Available replacers from environment:");
+		$this->table(['Name', 'Regex'], collect($replacers->items())->map(fn($item) => [$item->name, $item->regex])->toArray());
 
-        $processedGlobs = [];
-        $lastHeader = null;
+		$this->info("");
+		$this->info("Specified globs:");
+		$files = [];
 
-        foreach ($mappings->items() as $item) {
-            if (isset($processedGlobs[$item->glob])) {
-                continue;
-            }
+		$processedGlobs = [];
+		$lastHeader = null;
 
-            $processedGlobs[$item->glob] = true;
+		foreach ($mappings->items() as $item) {
+			if (isset($processedGlobs[$item->glob])) {
+				continue;
+			}
 
-            foreach ($updateEnvironments->findFiles($item->glob) as $absolutePath) {
-                $globColumn = '';
-                if ($lastHeader != $item->glob) {
-                    $globColumn = $item->glob;
-                }
+			$processedGlobs[$item->glob] = true;
 
-                $files[] = [$globColumn, $absolutePath];
-            }
-        }
+			foreach ($updateEnvironments->findFiles($item->glob) as $absolutePath) {
+				$globColumn = '';
+				if ($lastHeader != $item->glob) {
+					$globColumn = $item->glob;
+				}
 
-        $this->table(['Glob', 'Found files'], $files);
+				$files[] = [$globColumn, $absolutePath];
+			}
+		}
 
-        $this->info("");
-        $this->info("Created mappings:");
-        $this->table(
-            ['Variable', 'Variable value', 'Variable must match against', 'Success?', 'Glob', 'Replacers to execute on globbed files'],
-            collect($mappings->items())
-                ->map(function ($item) {
-                    $r = [];
-                    $r[] = $item->variable->name;
-                    $r[] = $item->variable->value;
-                    $r[] = $item->regexToMatchValue;
-                    $r[] = $item->matches() > 0 ? 'Yes' : 'No';
-                    $r[] = $item->glob;
-                    $r[] = collect($item->replacers)->map(fn($item) => $item->name)->join(", ");
-                    return $r;
-                })
-                ->toArray()
-        );
-    }
+		$this->table(['Glob', 'Found files'], $files);
 
-    /**
-     * Define the command's schedule.
-     *
-     * @param \Illuminate\Console\Scheduling\Schedule $schedule
-     * @return void
-     */
-    public function schedule(Schedule $schedule)
-    {
-        // $schedule->command(static::class)->everyMinute();
-    }
+		$this->info("");
+		$this->info("Created mappings:");
+		$this->table(
+			['Variable', 'Variable value', 'Variable must match against', 'Success?', 'Glob', 'Replacers to execute on globbed files'],
+			collect($mappings->items())
+				->map(function ($item) {
+					$r = [];
+					$r[] = $item->variable->name;
+					$r[] = $item->variable->value;
+					$r[] = $item->regexToMatchValue;
+					$r[] = $item->matches() > 0 ? 'Yes' : 'No';
+					$r[] = $item->glob;
+					$r[] = collect($item->replacers)->map(fn($item) => $item->name)->join(", ");
+					return $r;
+				})
+				->toArray()
+		);
+	}
+
+	/**
+	 * Define the command's schedule.
+	 *
+	 * @param \Illuminate\Console\Scheduling\Schedule $schedule
+	 * @return void
+	 */
+	public function schedule(Schedule $schedule)
+	{
+		// $schedule->command(static::class)->everyMinute();
+	}
 }

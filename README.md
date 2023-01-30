@@ -25,7 +25,7 @@ with:
 ### Optional arguments
 | Argument                          | Default | Description                                                                                                                                             |
 |-----------------------------------| --- |---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `directory`                       | `$CWD` | Directory, in which to operate. By default, the base directory is used.                                                                                 |
+| `directory`                       | `$CWD` | Directory, in which to operate. By default, the current working directory is used.                                                                                 |
 | `dump`                            | `<none>` | If `1`, it dumps the provided configuration                                                                                                             | 
 | `if_no_match_fail`                | `0` | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3`                                                  |
 | `if_well_known_vars_missing_fail` | `0` | If `1`, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided                                                      |
@@ -38,10 +38,11 @@ with:
 | `committer_email`                 | `<none>` | E-mail of committer, only relevant if `commit` is present                                                                                                            |
 
 ### Well-known variables and regular expressions
-Due the original requirement of this action, you can use the following GitOps-related arguments:
+Due the original requirement of this action, you can use the following built-in variables:
 
 | Argument | Description |
 | --- | --- |
+| `__always__` and `__true__` | Both variables are automatically set to `1` |
 | `docker_image_tag` | Docker image tag created by upstream repository |
 | `docker_image_tag_regex` | Regular expression to modify occurences of Docker image tags in globbed files |
 | `git_tag` | Git tag created by upstream repository |
@@ -49,7 +50,7 @@ Due the original requirement of this action, you can use the following GitOps-re
 | `git_branch` | Git branch modified in upstream repository |
 | `git_branch_regex` | Regular expression to modify occurences of Git branch in globbed files |
 
-There is __no__ need to use `docker_image_tag_regex`, `git_tag_regex` and `git_branch_regex`. You can register additional regular expressions as you like.
+There is __no__ need to use `docker_image_tag_regex`, `git_tag_regex` and `git_branch_regex`, those regular expressions are automatically registered. You can register additional regular expressions as you like.
 
 #### Registering additional regular expressions
 Additional regular expressions must be provided in the following format:
@@ -284,8 +285,20 @@ if $docker_image_tag =~ /v.*/ then
 endif
 ```
 
+### Do not check a regex for a given pattern
+If you do not have to check one or multiple known variable for a regex, you can simply use the well-known variables `__always__` or `__true__`:
+
+```yaml
+with:
+  mappings: "__always__ {THEN_UPDATE_FILES} **dev/values.yaml=docker_image_tag_regex"
+  docker_image_tag: "v0.2.0"
+  docker_image_tag_regex: "imageTag: \\\"(?<docker_image_tag>.*)\\\""
+```
+
+By using `__always__` or `__true__` the replacement will be applied, regardless of one of the variable's value.
+
 ### Updating multiple values at the same time
-When you need to apply multiple regexes at the same time, you can chain those regexes with:
+If you need to apply multiple regexes at the same time, you can chain those regexes with:
 
 ```yaml
 with:
@@ -417,7 +430,7 @@ When using `conditional-regex-search-and-replace-action`, you can either configu
 Before introducing this action, I've developed a Bash script for updating various GitOps repositories. Different projects had different requirements: The Bash script was no longer maintainable.
 Using Laravel Zero and Pest for developing testable GitHub Actions looks fine to me.
 
-### But I can do this with awk & sed.
+### But I can do everything with awk & sed.
 Just keep using `awk` & `sed`, it's fine!
 
 ### Why looks the DSL like it does?
@@ -435,7 +448,7 @@ variable_reference      = (lower_case_chars | digits | '_')+
 regex_reference         = (lower_case_chars | digits | '_')+
 
 matches                 = "=="
-matcher                 = variable_reference matches regex
+matcher                 = variable_reference (matches regex)?
 or_matcher              = "{OR}"
 matchers                = matcher (or_matcher matcher)+
 
