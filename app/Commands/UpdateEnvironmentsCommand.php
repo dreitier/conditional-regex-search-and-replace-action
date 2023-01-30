@@ -11,6 +11,7 @@ use App\Util;
 use App\Variable\Collection as VariableCollection;
 use App\Replacer\Collection as ReplacerCollection;
 use App\Mapping\Collection as MappingCollection;
+use App\Variable\Variable;
 use App\UpdateEnvironments;
 use Illuminate\Support\Facades\Event;
 use App\Events\LogEvent;
@@ -28,7 +29,7 @@ class UpdateEnvironmentsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'update-environments {--dump} {--mappings=} {--directory=environments} {--github} {--require-one-well-known-var} {--require-at-least-one-change} {--commit} {--commit-template=} {--commit-split-up-by=} {--committer-name=} {--committer-email=} {--updated-file-suffix=} {--custom-regexes=} {--custom-variables=}';
+    protected $signature = 'update-environments {--dump} {--mappings=} {--directory=.} {--github} {--require-one-well-known-var} {--require-at-least-one-change} {--commit} {--commit-template=} {--commit-split-up-by=} {--committer-name=} {--committer-email=} {--updated-file-suffix=} {--custom-regexes=} {--custom-variables=}';
 
     /**
      * The description of the command.
@@ -56,6 +57,8 @@ class UpdateEnvironmentsCommand extends Command
         }
 
         $this->warn($msg);
+		
+		return 0;
     }
 
     public function handleLog(LogEvent $event)
