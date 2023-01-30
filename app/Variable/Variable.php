@@ -10,4 +10,9 @@ class Variable
 	)
 	{
 	}
+
+	public static function of(string $name, string $value): Variable
+	{
+		return new static($name, $value);
+	}
 }
