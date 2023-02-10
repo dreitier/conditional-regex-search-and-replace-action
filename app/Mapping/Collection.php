@@ -87,7 +87,7 @@ class Collection
 				$resolvedRegexReplacer = $this->replacers->get($referencedRegexReplacer);
 
 				if (!$resolvedRegexReplacer) {
-					throw new \Exception("The referenced regex '{$referencedRegexReplacer}' does not exist");
+					throw new \Exception("The referenced regex '{$referencedRegexReplacer}' for mapping of glob '{$glob}' does not exist");
 				}
 
 				$usedRegexReplacers[] = $resolvedRegexReplacer;

@@ -1,0 +1,8 @@
+helm:
+  parameters:
+  - name: image.name
+    value: test.azurecr.io/test/img
+    forcestring: true
+  - name: image.tag
+    value: 1234 # IMAGE_TAG_MARKER_DONT_REMOVE_THIS_COMMENT
+    forcestring: true

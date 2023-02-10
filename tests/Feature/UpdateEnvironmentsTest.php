@@ -17,22 +17,22 @@ it('can update a single match in a file', function () {
 		->add(new Replacer('docker_image_tag', 'imageTag: \"(?<docker_image_tag>.*)\" (?<custom_var>.*)'));
 
 	$mappingDefinition = "docker_image_tag==1.* {THEN_UPDATE_FILES} dev/*.yaml=docker_image_tag";
-	
+
 	$mappings = new MappingCollection($variables, $replacers);
 	$mappings->upsert($mappingDefinition);
 
-	$sut = new UpdateEnvironments($mappings, $variables, __DIR__ . "/environments");
+	$sut = new UpdateEnvironments($mappings, $variables, __DIR__ . "/scenarios/environments");
 	$called = 0;
-	
+
 	$sut->process(function(ContentUpdater $contentUpdater, $pathToFile) use (&$called){
 		$replaced = $contentUpdater->update(file_get_contents($pathToFile));
-		
+
 		expect($replaced)
 			->toBe(file_get_contents($pathToFile . ".expected"));
-		
+
 		$called++;
 	});
-	
-	
+
+
 	expect($called)->toBe(1);
 });

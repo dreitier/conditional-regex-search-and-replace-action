@@ -23,19 +23,21 @@ with:
 | `mappings` | DSL to define search-and-replace operations, see below |
 
 ### Optional arguments
-| Argument                          | Default | Description                                                                                                                                             |
-|-----------------------------------| --- |---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `directory`                       | `$CWD` | Directory, in which to operate. By default, the current working directory is used.                                                                                 |
+| Argument                          | Default  | Description                                                                                                                                             |
+|-----------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `directory`                       | `$CWD`   | Directory, in which to operate. By default, the current working directory is used.                                                                      |
 | `dump`                            | `<none>` | If `1`, it dumps the provided configuration                                                                                                             | 
-| `if_no_match_fail`                | `0` | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3`                                                  |
-| `if_well_known_vars_missing_fail` | `0` | If `1`, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided                                                      |
+| `if_no_match_fail`                | `0`      | If the action has not modified any file and `if_no_match_fail` is `1`, it will fail with exit code `3`                                                  |
+| `if_well_known_vars_missing_fail` | `0`      | If `1`, it fails with exit code `2` if none of docker_image_tag, git_branch or git_tag is provided                                                      |
 | `updated_file_suffix`             | `<none>` | If set, any changes will be written to another file the path of the original file and that suffix                                                       |
 | `register_custom_regexes`         | `<none>` | A comma-separated list of custom regular expressions to register                                                                                        |
 | `register_custom_variables`       | `<none>` | A comma-separated list of custom variables to register                                                                                                  |
-| `commit`                          | `0` | If there has been any modified files (see below, `outputs.total_modified_files`), it will commit the changes to the Git repository                      |
+| `commit`                          | `0`      | If there has been any modified files (see below, `outputs.total_modified_files`), it will commit the changes to the Git repository                      |
 | `commit_template`                 | `<none>` | Template to use for the commit message. You can use the [Blade template engine](https://laravel.com/docs/9.x/blade) to dynamically specify the message. |
 | `committer_name`                  | `<none>` | Name of committer, only relevant if `commit` is present                                                                                                 |
-| `committer_email`                 | `<none>` | E-mail of committer, only relevant if `commit` is present                                                                                                            |
+| `committer_email`                 | `<none>` | E-mail of committer, only relevant if `commit` is present                                                                                               |
+| `skip-regexes-autodetect`         | `0`      | Skip auto-detection of regexes for environment variables ending with `_REGEX`                                                                           |
+| `skip-variables-autodetect`       | `0`      | Skip auto-detection of variables for environment variables ending with `_VAR`                                                                           |
 
 ### Well-known variables and regular expressions
 Due the original requirement of this action, you can use the following built-in variables:
@@ -53,33 +55,50 @@ Due the original requirement of this action, you can use the following built-in 
 There is __no__ need to use `docker_image_tag_regex`, `git_tag_regex` and `git_branch_regex`, those regular expressions are automatically registered. You can register additional regular expressions as you like.
 
 #### Registering additional regular expressions
-Additional regular expressions must be provided in the following format:
+Additional regular expressions are automatically detected if the environment variable has the suffix (`_REGEX`). If your regular expression has not that suffix, you can use the option `register_custom_regexes`:
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
 with:
   # ...
-  register_custom_regexes: check_for_customer_regex
+  register_custom_regexes: check_for_customer_myregex
 env:
-  CHECK_FOR_CUSTOMER_REGEX: "/customer: (<customer_number>\d+)/"
+  # this one is automatically detected
+  MY_CUSTOM_REGEX: "/a: b/"
+  # this is detected by using `register_custom_regexes`
+  CHECK_FOR_CUSTOMER_MYREGEX: "/customer: (<customer_number>\d+)/"
 ```
 
-To register mulitple regular expressions, use a comma (`,`) for separation:
+To register multiple regular expressions without the `_REGEX` suffix, use a comma (`,`) for separation:
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
 with:
   # ...
-  register_custom_regexes: check_for_customer_regex, project_id_regex
+  register_custom_regexes: check_for_customer_myregex, project_id_myregex
 env:
-  CHECK_FOR_CUSTOMER_REGEX: "/customer: (?<customer_number>\d+)/"
-  PROJECT_ID_REGEX: "/project: (?<project_id>\d+)/"
+  CHECK_FOR_CUSTOMER_MYREGEX: "/customer: (?<customer_number>\d+)/"
+  PROJECT_MYID_REGEX: "/project: (?<project_id>\d+)/"
 ```
 
 
 #### Registering additional variables
 To provide additional variables aside from `docker_image_tag`, `git_tag` and `git_branch` you have to register those variables.
-For referencing the `customer_number` variable of the previous section, you have to register it:
+- Variables are automatically detected for environment variables having the suffix `_VAR`.
+- If your variable cannot have the suffix `_VAR`, you have to use `register_custom_variables`.
+
+For referencing the `customer_number` variable of the previous section, you can use either:
+
+```yaml
+uses: dreitier/conditional-regex-search-and-replace-action
+with:
+  # ...
+env:
+  # this one is automatically detected by using the _VAR suffix.
+  CUSTOMER_NUMBER_VAR: "555"
+```
+
+or
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
@@ -87,10 +106,13 @@ with:
   # ...
   register_custom_variables: customer_number
 env:
+  # custom registered variable
   CUSTOMER_NUMBER: "555"
 ```
 
-To register multiple variables, use a comma (`,`) for separation:
+In both cases, you can reference the variable later on with `customer_number`. The `_VAR` suffix is removed.
+
+To register multiple variables without the `_VAR` suffix, use a comma (`,`) for separation:
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
@@ -128,11 +150,10 @@ Reference a custom variable:
 uses: dreitier/conditional-regex-search-and-replace-action
 with:
   # ...
-  register_custom_variables: customer_number
   docker_image_tag: '1.0.0'
   commit_template: 'chore: Update to Docker image tag {{ $docker_image_tag } for customer {{ $customer_number))'
 env:
-    CUSTOMER_NUMBER: "555" # or set it to an empty string
+    CUSTOMER_NUMBER_VAR: "555" # or set it to an empty string
 ```
 
 Expressions:
@@ -140,11 +161,10 @@ Expressions:
 uses: dreitier/conditional-regex-search-and-replace-action
 with:
   # ...
-  register_custom_variables: customer_number
   docker_image_tag: '1.0.0'
   commit_template: 'chore: Update to Docker image tag {{ $docker_image_tag }}@if(!empty($customer_number)) for customer {{ $customer_number }}@endif'
 env:
-    CUSTOMER_NUMBER: "" # or a non-empty string
+    CUSTOMER_NUMBER_VAR: "" # or a non-empty string
 ```
 
 #### Mappings
@@ -160,13 +180,12 @@ In each regular expression to apply, you have access to all well-known and custo
 
 ```yaml
 uses: dreitier/conditional-regex-search-and-replace-action
-  register_custom_variables: customer_number
-  register_custom_regexes: my_regex
   docker_image_tag: '1.0.0'
   docker_image_tag_regex: 'imageTag: \"(?<docker_image_tag).*)\"'
   mappings: 'docker_image_tag==.* {THEN_UPDATE_FILES} **.yaml=docker_image_tag_regex&my_regex'
 env:
-  CUSTOMER_NUMBER: "555"
+  # auto-detect both variable and regex
+  CUSTOMER_NUMBER_VAR: "555"
   MY_REGEX: '.*customer: \"(?<customer_number>.*)\".*'
 ```
 
@@ -211,11 +230,10 @@ jobs:
         id: search_and_replace_op
         uses: dreitier/conditional-regex-search-and-replace-action
         with:
-          register_custom_variables: customer_number
           docker_image_tag: '1.0.0'
           # ...
         env:
-            CUSTOMER_NUMBER: "555"
+            CUSTOMER_NUMBER_VAR: "555"
 
       - name: Commit and push
         if: ${{ steps.search_and_replace.outputs.total_modified_files >= 1 }}

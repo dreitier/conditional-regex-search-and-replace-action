@@ -74,10 +74,11 @@ class UpdateEnvironments
 		
 		AfterAllFilesProcessed::dispatch($fileProcessingListener->getModifiedSourceFiles());
 	}
-	
+
 	public function findFiles($glob)
 	{
-		$files = Glob::in($glob, $this->baseDirectory);
+		$files = Glob::in($glob, $this->baseDirectory)
+			->ignoreDotFiles(false);
 		return $files;
 	}
 }

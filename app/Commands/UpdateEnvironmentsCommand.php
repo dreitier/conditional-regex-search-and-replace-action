@@ -29,7 +29,23 @@ class UpdateEnvironmentsCommand extends Command
 	 *
 	 * @var string
 	 */
-	protected $signature = 'update-environments {--dump} {--mappings=} {--directory=.} {--github} {--require-one-well-known-var} {--require-at-least-one-change} {--commit} {--commit-template=} {--commit-split-up-by=} {--committer-name=} {--committer-email=} {--updated-file-suffix=} {--custom-regexes=} {--custom-variables=}';
+	protected $signature = 'update-environments \
+	{--dump} \
+	{--mappings=} \
+	{--directory=.} \
+	{--github} \
+	{--require-one-well-known-var} \
+	{--require-at-least-one-change} \
+	{--commit} \
+	{--commit-template=} \
+	{--commit-split-up-by=} \
+	{--committer-name=} \
+	{--committer-email=} \
+	{--updated-file-suffix=} \
+	{--custom-regexes=} \
+	{--custom-variables=} \
+	{--skip-regexes-autodetect} \
+	{--skip-variables-autodetect}';
 
 	/**
 	 * The description of the command.
@@ -57,7 +73,7 @@ class UpdateEnvironmentsCommand extends Command
 		}
 
 		$this->warn($msg);
-		
+
 		return 0;
 	}
 
@@ -130,29 +146,17 @@ class UpdateEnvironmentsCommand extends Command
 		$customVariables = Util::trimmedExplode(',', $this->option('custom-variables'));
 
 		try {
-			$variables = $variables->mergeWellKnownVariables();
-
-			if (!empty($customVariables)) {
-				$variables->locateAndMerge($customVariables);
-			}
+            $variables->mergeWellKnownVariables();
+            $autodetectVariables = !$this->option("skip-variables-autodetect");
+            $variables->upsert($customVariables, $autodetectVariables);
 		} catch (MissingWellKnownVariableException $e) {
 			$this->failOnOption("require-one-well-known-var", $e, 2);
 		} catch (\Exception $e) {
 			return $this->fail($e->getMessage());
 		}
 
-		$replacers = new ReplacerCollection();
-		$possibleReplacerNames = array_unique(
-			array_merge(
-				collect($variables->variableNames())
-					->map(fn($item) => $item . "_regex")
-					->toArray(),
-				$customRegexes
-			),
-			SORT_REGULAR
-		);
-
-		$replacers->mergeFromEnvironment($possibleReplacerNames);
+        $autodetectRegexes = !$this->option("skip-regexes-autodetect");
+        $replacers = ReplacerCollection::create($customRegexes, $autodetectRegexes);
 
 		$mappings = new MappingCollection($variables, $replacers);
 		$mappings->upsert($providedMappings);
@@ -210,7 +214,7 @@ class UpdateEnvironmentsCommand extends Command
 		$this->info("");
 		$this->info("Created mappings:");
 		$this->table(
-			['Variable', 'Variable value', 'Variable must match against', 'Success?', 'Glob', 'Replacers to execute on globbed files'],
+			['Variable', 'Variable value', 'Variable must match against', 'Match successful?', 'Glob', 'Replacers to execute on globbed files'],
 			collect($mappings->items())
 				->map(function ($item) {
 					$r = [];

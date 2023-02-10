@@ -1,54 +1,62 @@
 <?php
+
 use App\Variable\Variable;
 use App\Variable\Collection as VariableCollection;
 
 test('can detect default variables', function () {
-	putenv('DOCKER_IMAGE_TAG=latest');
-	putenv('GIT_TAG=1.0.0');
-	putenv('GIT_BRANCH=develop');
-	
-	$sut = new VariableCollection();
-	$sut->mergeWellKnownVariables();
+    putenv('DOCKER_IMAGE_TAG=latest');
+    putenv('GIT_TAG=1.0.0');
+    putenv('GIT_BRANCH=develop');
 
-	$r = $sut->items();
-	
-	expect($r)->toHaveCount(3);
-	expect($r)->sequence(
-		fn($first) => 
-			expect($first->value->name)
-				->toBe('docker_image_tag')
-				->and($first->value->value)
-				->toBe('latest'),
-		fn($second) => 
-			expect($second->value->name)
-				->toBe('git_tag')
-				->and($second->value->value)
-				->toBe('1.0.0'),
-		fn($third) => 
-			expect($third->value->name)
-				->toBe('git_branch')
-				->and($third->value->value)
-				->toBe('develop'),
-	);
-	
-	putenv('DOCKER_IMAGE_TAG');
-	putenv('GIT_TAG');
-	putenv('GIT_BRANCH');
+    $sut = new VariableCollection();
+    $sut->mergeWellKnownVariables();
+
+    $r = $sut->items();
+
+    expect($r)->toHaveCount(3);
+    expect($r)->sequence(
+        fn($first) => expect($first->value->name)
+            ->toBe('docker_image_tag')
+            ->and($first->value->value)
+            ->toBe('latest'),
+        fn($second) => expect($second->value->name)
+            ->toBe('git_tag')
+            ->and($second->value->value)
+            ->toBe('1.0.0'),
+        fn($third) => expect($third->value->name)
+            ->toBe('git_branch')
+            ->and($third->value->value)
+            ->toBe('develop'),
+    );
+
+    putenv('DOCKER_IMAGE_TAG');
+    putenv('GIT_TAG');
+    putenv('GIT_BRANCH');
 });
 
-test('can resolve custom variables', function() {
-	putenv('CUSTOM_VARIABLE=custom');
+test('can resolve custom variables', function () {
+    putenv('CUSTOM_VARIABLE=custom');
 
-	$sut = new VariableCollection();
-	$sut->locateAndMerge(['custom_variable']);
-	$r = $sut->items();
-	
-	expect($r)->toHaveCount(1);
-	$first= $r[0];
-	expect($first->name)
-		->toBe('custom_variable')
-		->and($first->value)
-		->toBe('custom');
+    $sut = new VariableCollection();
+    $sut->locateAndMerge(['custom_variable']);
+    $r = $sut->items();
 
-	putenv('CUSTOM_VARIABLE');
+    expect($r)->toHaveCount(1);
+    $first = $r[0];
+    expect($first->name)
+        ->toBe('custom_variable')
+        ->and($first->value)
+        ->toBe('custom');
+
+    putenv('CUSTOM_VARIABLE');
+});
+
+test('can autodetect variables', function () {
+    putenv('MY_AUTODETECTED_VAR=value');
+    $sut = new VariableCollection();
+    $sut->upsert();
+
+    $first = $sut->get('my_autodetected');
+    $this->assertNotNull($first);
+    $this->assertEquals('value', $first->value);
 });
